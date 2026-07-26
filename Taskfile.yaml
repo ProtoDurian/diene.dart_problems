@@ -4,12 +4,21 @@ version: '3'
 
 includes:
   secret: tasks/Taskfile.secret.yaml
+  # ### dart-lib-test-includes
+  # #### source: dart-lib
+  unit:
+    taskfile: tasks/Taskfile.test.yaml
+    vars:
+      MODE: unit
+  meta:
+    taskfile: tasks/Taskfile.test.yaml
+    vars:
+      MODE: meta
 
 tasks:
   setup:
     desc: Set up generated workspace assets
     cmds:
-      - dart pub get
       - ./scripts/local/skills-sync.sh
 
   lint:
@@ -23,44 +32,66 @@ tasks:
       - ./scripts/local/skills-sync.sh
 
   # ### dart-lib-tasks
-  # #### source: lib/dart/problems
+  # #### source: dart-lib
+  clean:
+    desc: Remove Dart dependency, build, coverage, and generated-doc artifacts
+    cmds:
+      - rm -rf .dart_tool packages/diene_problems/.dart_tool packages/diene_problems/coverage packages/diene_problems/doc/api
+
+  build:
+    desc: Validate the publishable Dart library and example
+    cmds:
+      - dart pub get >/dev/null
+      - dart analyze --fatal-infos packages/diene_problems/lib packages/diene_problems/example
+
   analyze:
-    desc: Analyze Dart source and tests
+    desc: Analyze the whole workspace, tests, and tooling
     cmds:
-      - dart analyze
-
-  test:
-    desc: Run Dart unit tests
-    cmds:
-      - dart test
-
-  test:coverage:
-    desc: Run Dart tests with coverage (lcov input for the coverage ledger)
-    cmds:
-      - dart test --coverage=coverage
-      - dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
-
-  test:meta:
-    desc: Run the meta tier (assert-the-asserter over test_helper.dart)
-    cmds:
-      - dart test test/meta
+      - ./scripts/ci/analyze.sh
 
   deadcode:
-    desc: 'Deadcode pass 1 — whole package (lib + test)'
+    desc: Run repository and production-only dead-code passes
     cmds:
-      - dart analyze
+      - ./scripts/local/deadcode.sh
 
-  deadcode:no-tests:
-    desc: 'Deadcode pass 2 — production only (lib)'
+  package:validate:
+    desc: Validate package metadata, pana score, and pub.dev dry-run contents
     cmds:
-      - dart analyze lib
+      - ./scripts/ci/package-validate.sh
 
-  manifest:check:
-    desc: Verify pubspec version matches tag (manifest==tag guard). Set TAG=vX.Y.Z
+  test:
+    desc: Run unit/C0 and TestHelper meta suites without coverage
     cmds:
-      - ./scripts/validate/manifest-tag.sh ${TAG}
+      - task: unit:default
+      - task: meta:default
 
-  publish:dry-run:
-    desc: Validate the package shape without publishing
+  test:unit:
+    desc: Run unit and C0 conformance suites without coverage
     cmds:
-      - dart pub publish --dry-run
+      - task: unit:default
+
+  test:meta:
+    desc: Run assert-the-asserter tests for TestHelper
+    cmds:
+      - task: meta:default
+
+  test:coverage:
+    desc: Run every coverage-capable tier with its isolated ledger
+    cmds:
+      - task: unit:coverage
+      - task: meta:coverage
+
+  test:unit:coverage:
+    desc: Run unit and C0 tests with the unit-only coverage ledger
+    cmds:
+      - task: unit:coverage
+
+  test:meta:coverage:
+    desc: Run TestHelper meta tests with the helper-only coverage ledger
+    cmds:
+      - task: meta:coverage
+
+  test:watch:
+    desc: Re-run the fast unit and C0 suites when Dart files change
+    cmds:
+      - ./scripts/local/watch-tests.sh

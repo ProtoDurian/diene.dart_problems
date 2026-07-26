@@ -4,7 +4,6 @@ name: CI
 
 on:
   push:
-    branches: ['**']
   pull_request:
   workflow_dispatch:
 
@@ -16,16 +15,60 @@ jobs:
     uses: ./.github/workflows/⚡reusable-precommit.yaml
     secrets: inherit
 
-  test:
-    name: Dart Test
+  # ### dart-lib-analyze
+  # #### source: dart-lib
+  analyze:
+    name: Static Analysis
+    permissions:
+      contents: read
+    uses: ./.github/workflows/⚡reusable-analyze.yaml
+    secrets: inherit
+
+  # ### dart-lib-unit
+  # #### source: dart-lib
+  unit:
+    name: Unit and C0 Tests
     permissions:
       contents: read
     uses: ./.github/workflows/⚡reusable-test.yaml
     secrets: inherit
+    with:
+      mode: unit
 
-  gates:
-    name: Dart Gates
+  # ### dart-lib-meta
+  # #### source: dart-lib
+  meta:
+    name: TestHelper Meta Tests
     permissions:
       contents: read
-    uses: ./.github/workflows/⚡reusable-gates.yaml
+    uses: ./.github/workflows/⚡reusable-test.yaml
+    secrets: inherit
+    with:
+      mode: meta
+
+  # ### dart-lib-deadcode
+  # #### source: dart-lib
+  deadcode:
+    name: Dead Code
+    permissions:
+      contents: read
+    uses: ./.github/workflows/⚡reusable-deadcode.yaml
+    secrets: inherit
+
+  # ### dart-lib-package-validate
+  # #### source: dart-lib
+  package-validate:
+    name: Package Validation
+    permissions:
+      contents: read
+    uses: ./.github/workflows/⚡reusable-package-validate.yaml
+    secrets: inherit
+
+  # ### dart-lib-nix-check
+  # #### source: dart-lib
+  nix-check:
+    name: Nix Check
+    permissions:
+      contents: read
+    uses: ./.github/workflows/⚡reusable-nix-check.yaml
     secrets: inherit

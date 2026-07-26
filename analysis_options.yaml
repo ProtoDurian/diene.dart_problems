@@ -5,18 +5,20 @@ analyzer:
     strict-casts: true
     strict-inference: true
     strict-raw-types: true
-  # No `exclude` list (R12 — deadcode passes use no exclusion lists). This pure
-  # Dart package ships no generated code.
+  errors:
+    missing_required_param: error
+    missing_return: error
 
 linter:
   rules:
     always_declare_return_types: true
     avoid_dynamic_calls: true
+    avoid_print: true
     cancel_subscriptions: true
     close_sinks: true
     directives_ordering: true
     discarded_futures: true
-    prefer_const_constructors: true
     prefer_final_locals: true
     sort_constructors_first: true
     unawaited_futures: true
+    use_super_parameters: true

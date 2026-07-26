@@ -11,6 +11,9 @@ with packages;
     pls
     sg
     skopeo
+    # ### dart-lib-dev
+    # #### source: dart-lib
+    dart
   ];
 
   # ### workspace-lint
@@ -26,35 +29,15 @@ with packages;
     shellcheck
     treefmt
     yq-go
-  ];
-
-  # ### flutter-base-mobile
-  # #### source: flutter-base
-  mobile = [
-    codemagic-cli-tools
-    fastlane
-    flutter
-    resvg
-    rsync
-  ]
-  ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [ cocoapods ];
-
-  # ### flutter-base-android
-  # #### source: flutter-base
-  android = [
-    androidsdk
-    bundletool
-    jdk17
-    protobuf
-    unzip
-    zip
+    # ### dart-lib-lint
+    # #### source: dart-lib
+    gitlint
   ];
 
   # ### workspace-main
   # #### source: workspace
   main = [
     cyanprint
-    bun
     docker-client
     git
     go-task
@@ -68,6 +51,9 @@ with packages;
     shellcheck
     skopeo
     yq-go
+    # ### dart-lib-main
+    # #### source: dart-lib
+    dart
   ];
 
   # ### workspace-releaser-bootstrap

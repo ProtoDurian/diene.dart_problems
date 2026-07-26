@@ -3,10 +3,9 @@
   pkgs,
   pkgs-2605,
   pkgs-unstable,
-  pkgs-android,
 }:
 let
-  cyanprintVersion = "4.8.0";
+  cyanprintVersion = "4.9.0";
   cyanprintSystem = pkgs.stdenv.hostPlatform.system;
   cyanprintPlatform =
     ({
@@ -17,10 +16,10 @@ let
     }).${cyanprintSystem};
   cyanprintHash =
     ({
-      x86_64-linux = "sha256-lxibv7rqcp0rQtvWb41ifxA+ORwt8yiSKM0NaRJmt1w=";
-      aarch64-linux = "sha256-XDx6CtFS4doSeswYWyTPT0GHPDcW8tb6YEzd5QJuv78=";
-      x86_64-darwin = "sha256-xGoTSpMkXAKdUm6NDDN75yfHu25nMgXP1hiIfGb9fvo=";
-      aarch64-darwin = "sha256-7xLzKKCK5UiU1saHf8l1z1UuInQm1CTjowIlwpGRM7Y=";
+      x86_64-linux = "sha256-z5whvbKPJTgyR5qWeYefN7NuTKY1pWaRkYDnyyaNG9k=";
+      aarch64-linux = "sha256-SrhazRJbeK3vJHGvv0TwKHdz/ulqZM04qMtKgX0AJgA=";
+      x86_64-darwin = "sha256-XIolxZN+KVf/Ui5/rQjg+k3OXLrbJuGGxh6iYkki+/k=";
+      aarch64-darwin = "sha256-xugPBTO6CTixUjpq9PPq2WOQySci735gfuOXZSn75Ew=";
     }).${cyanprintSystem};
   cyanprint = pkgs.stdenvNoCC.mkDerivation {
     pname = "cyanprint";
@@ -45,39 +44,6 @@ let
     '';
     meta.mainProgram = "cyanprint";
   };
-  # ### flutter-base-mobile-packages
-  # #### source: flutter-base
-  ruby-xcodeproj = pkgs-unstable.ruby.withPackages (rubyPackages: [ rubyPackages.xcodeproj ]);
-  androidComposition = pkgs-android.androidenv.composeAndroidPackages {
-    platformVersions = [
-      "34"
-      "35"
-      "36"
-    ];
-    buildToolsVersions = [
-      "35.0.0"
-      "36.0.0"
-    ];
-    abiVersions = [
-      "arm64-v8a"
-      "x86_64"
-    ];
-    includeNDK = true;
-    ndkVersions = [ "28.2.13676358" ];
-    cmakeVersions = [ "3.22.1" ];
-    includeEmulator = false;
-    includeSystemImages = false;
-    extraLicenses = [
-      "android-googletv-license"
-      "android-sdk-arm-dbt-license"
-      "android-sdk-license"
-      "android-sdk-preview-license"
-      "google-gdk-license"
-      "intel-android-extra-license"
-      "intel-android-sysimage-license"
-      "mips-android-sysimage-license"
-    ];
-  };
   all = rec {
     # ### nix-root
     # #### source: main
@@ -86,7 +52,6 @@ let
       {
         inherit
           atomiutils
-          codemagic-cli-tools
           infralint
           infrautils
           pls
@@ -103,28 +68,20 @@ let
         inherit
           actionlint
           bash
-          bun
-          bundletool
           docker-client
           git
           go-task
           infisical
-          jdk17
           jq
           kubeconform
           kubernetes-helm
           kyverno
           pre-commit
-          protobuf
-          resvg
           ripgrep
-          rsync
           shellcheck
           skopeo
           treefmt
-          unzip
           yq-go
-          zip
           ;
       }
     );
@@ -134,21 +91,26 @@ let
     nix-unstable = (
       with pkgs-unstable;
       {
-        # ### flutter-base-mobile-tools
-        # #### source: flutter-base
-        inherit
-          cocoapods
-          fastlane
-          flutter
-          ;
       }
     );
 
-    # ### flutter-base-android-sdk
-    # #### source: flutter-base
-    nix-android = {
-      androidsdk = androidComposition.androidsdk;
-    };
+    # ### dart-lib-packages
+    # #### source: dart-lib
+    dart-lib-packages = (
+      with pkgs-unstable;
+      {
+        dart = flutter.dart;
+      }
+    );
+
+    # ### dart-lib-tools
+    # #### source: dart-lib
+    dart-lib-tools = (
+      with pkgs-2605;
+      {
+        inherit gitlint;
+      }
+    );
 
     root = {
       inherit cyanprint;
@@ -156,4 +118,4 @@ let
   };
 in
 with all;
-atomipkgs // nix-2605 // nix-unstable // nix-android // root // { inherit ruby-xcodeproj; }
+atomipkgs // nix-2605 // nix-unstable // dart-lib-packages // dart-lib-tools // root

@@ -9,16 +9,13 @@ let
     name = "workspace-validator-runtime";
     paths = [
       packages.bash
-      packages.bun
-      packages.flutter
+      packages.dart
       packages.git
       packages.jq
       packages.ripgrep
       packages.yq-go
       pkgs.coreutils
-      pkgs.diffutils
       pkgs.findutils
-      pkgs.gawk
       pkgs.gnugrep
       pkgs.gnused
     ];
@@ -163,7 +160,7 @@ pre-commit-lib.run {
     a-releaser-commit = {
       enable = true;
       name = "Conventional commit";
-      entry = "releaser lint-commit -c atomi_release.yaml";
+      entry = "${packages.gitlint}/bin/gitlint --staged --msg-filename";
       stages = [ "commit-msg" ];
       pass_filenames = true;
       language = "system";
@@ -196,21 +193,39 @@ pre-commit-lib.run {
     };
 
     # ### dart-lib-hooks
-    # #### source: lib/dart/problems
+    # #### source: dart-lib
+    a-dart-format = {
+      enable = true;
+      name = "Dart format";
+      entry = "${packages.dart}/bin/dart format --output=none --set-exit-if-changed";
+      files = "^packages/diene_problems/(lib|test|example)/.*[.]dart$";
+      pass_filenames = true;
+      language = "system";
+    };
+
     a-dart-analyze = {
       enable = true;
       name = "Dart analyze";
       entry = validator "scripts/ci/analyze.sh";
-      files = "^(lib|test)/.*[.]dart$|^(pubspec|analysis_options)[.]yaml$";
+      files = "^packages/diene_problems/(lib|test|example|tool)/.*[.]dart$|^(packages/diene_problems/(pubspec|analysis_options)|pubspec)[.]yaml$";
       pass_filenames = false;
       language = "system";
     };
 
     a-dart-test = {
       enable = true;
-      name = "Dart unit tests";
-      entry = validator "scripts/ci/test.sh";
-      files = "^(lib|test)/.*[.]dart$|^pubspec[.]yaml$";
+      name = "Dart unit, C0, and meta tests";
+      entry = validator "scripts/ci/test-all.sh";
+      files = "^packages/diene_problems/(lib|test)/.*[.]dart$|^(packages/diene_problems/pubspec|pubspec)[.]yaml$";
+      pass_filenames = false;
+      language = "system";
+    };
+
+    a-dart-package = {
+      enable = true;
+      name = "Dart package and TestHelper boundary";
+      entry = validator "scripts/validate/dart-package.sh";
+      files = "^(packages/diene_problems/(lib/.*[.]dart|pubspec[.]yaml|README[.]md|CHANGELOG[.]md|LICENSE|skills/.*|doc/diene_problems[.]md)|pubspec[.]yaml|VERSION)$";
       pass_filenames = false;
       language = "system";
     };
